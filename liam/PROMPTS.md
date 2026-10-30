@@ -65,9 +65,28 @@ En tant qu’étudiant, je veux marquer une tâche comme terminée afin de suivr
 En tant qu’étudiant, je veux filtrer mes tâches selon leur état afin de retrouver rapidement celles à faire ou terminées.
 En tant qu’étudiant, je veux supprimer une tâche afin de retirer celles dont je n’ai plus besoin.
 
-C'est les plus intérressant 
+"C'est les plus intérressantes pour nous, il faut juste affiner les réponses"
 
 **Rejeté :** 
- trop complexe pour notre niveau
+"Les moins utiles pour nous :"
 
-**Pourquoi :** on reste sur localStorage
+En tant qu’étudiant, je veux créer une tâche avec un titre afin de noter ce que j’ai à faire.
+En tant qu’étudiant, je veux modifier le titre d’une tâche afin de corriger ou préciser son contenu.
+
+## Prompt 5 · User stories (Codex)
+**Prompt :** J'aime bien mais tu pourrais preciser (beaucoup) sur :
+En tant qu’étudiant, je veux consulter la liste de mes tâches afin de voir ce qu’il me reste à accomplir.
+En tant qu’étudiant, je veux marquer une tâche comme terminée afin de suivre mon avancement.
+En tant qu’étudiant, je veux filtrer mes tâches selon leur état afin de retrouver rapidement celles à faire ou terminées.
+En tant qu’étudiant, je veux supprimer une tâche afin de retirer celles dont je n’ai plus besoin.
+
+**Résultat :**
+- En tant qu’étudiant, je veux consulter toutes mes tâches dans une liste affichant leur titre et leur état (« à faire » ou « terminée »), afin de voir rapidement ce qu’il me reste à accomplir.
+- En tant qu’étudiant, je veux marquer une tâche comme terminée, puis pouvoir voir visuellement qu’elle est accomplie, afin de suivre mon avancement sans la confondre avec les tâches restantes.
+- En tant qu’étudiant, je veux filtrer la liste pour afficher toutes les tâches, seulement celles à faire ou seulement celles terminées, afin de retrouver rapidement les tâches correspondant à mon besoin.
+- En tant qu’étudiant, je veux supprimer une tâche de ma liste, afin de retirer celles qui ne sont plus utiles et de garder une liste à jour.
+
+**Gardé :** 
+"TOUTES : C'est parfait, il faut juste deux/trois changements"
+
+**Pourquoi :** on reste sur localStorage 
