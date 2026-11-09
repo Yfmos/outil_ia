@@ -205,7 +205,7 @@ taskflow/
 
 Pour ce projet, il s’agit de **JavaScript** (souvent abrégé JS), et non de Java, qui est un langage différent.
 
-## Prompt 9 · Modèle de données (Codex)
+## Prompt 10 · Modèle de données (Codex)
 
 **Prompt :** propose moi des Modèles de données cohérente pour ce projet exemple: {
  "id": 1,
@@ -272,3 +272,35 @@ Pour représenter l’ensemble des tâches et la progression de la banquise, tu 
 Le nombre de pingouins peut être calculé à partir des tâches terminées : **un pingouin initial, puis un pingouin ajouté par tâche accomplie**. Il n’est donc pas nécessaire de sauvegarder ce nombre séparément.
 
 Pour repérer une tâche en retard, compare son échéance à la date du jour : elle est en retard si elle n’est pas terminée et que son échéance est passée.
+
+
+## Prompt 11 · Structure de données (Codex)
+
+**Prompt :** crée moi les fichier selon l'arborescence @README.md (19-32) 
+
+**Résultat :** L'arborescence de TaskFlow est en place, avec un contenu de départ pour que la page s'ouvre déjà.
+
+```
+.
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   ├── app.js
+│   ├── tasks.js
+│   ├── penguins.js
+│   └── storage.js
+└── assets/
+    ├── images/
+    │   └── banquise.svg
+    └── icons/
+```
+
+- `index.html` relie la feuille de style et les quatre scripts, et pose les zones banquise et liste de tâches.
+- `css/style.css` pose la mise en page de base.
+- `js/storage.js` lit et écrit les données dans `localStorage`.
+- `js/tasks.js` affiche les titres des tâches.
+- `js/penguins.js` affiche un pingouin, plus un par tâche terminée.
+- `js/app.js` charge les données au démarrage.
+- `assets/images/banquise.svg` est le fond de la banquise.
+- `assets/icons/` est vide pour l'instant (un fichier `.gitkeep` garde le dossier).
