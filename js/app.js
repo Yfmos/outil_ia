@@ -1,5 +1,7 @@
 const donnees = chargerDonnees();
 const formulaireTache = document.querySelector("#formulaire-tache");
+const afficherTerminees = document.querySelector("#afficher-terminees");
+const nombreTerminees = document.querySelector("#nombre-terminees");
 const dialogueRappel = document.querySelector("#dialogue-rappel");
 const rappelsEnAttente = [];
 const minuteursRappel = new Map();
@@ -80,6 +82,11 @@ function programmerProchaineEcheance() {
 }
 
 function actualiserAffichage() {
+  const totalTerminees = donnees.taches.filter(function (tache) {
+    return tache.statut === "terminee";
+  }).length;
+  nombreTerminees.textContent = totalTerminees > 0 ? "(" + totalTerminees + ")" : "";
+
   afficherTaches(donnees, function (tache, estTerminee) {
     tache.statut = estTerminee ? "terminee" : "a_faire";
     sauvegarderDonnees(donnees);
@@ -117,7 +124,7 @@ function actualiserAffichage() {
     actualiserAffichage();
   }, function () {
     actualiserAffichage();
-  });
+  }, afficherTerminees.checked);
   afficherPingouins(donnees);
   programmerProchaineEcheance();
 }
@@ -171,6 +178,8 @@ formulaireTache.addEventListener("submit", function (evenement) {
 formulaireTache.elements.titre.addEventListener("input", function () {
   formulaireTache.elements.titre.setCustomValidity("");
 });
+
+afficherTerminees.addEventListener("change", actualiserAffichage);
 
 ["echeance", "rappelLe"].forEach(function (nomChamp) {
   formulaireTache.elements[nomChamp].addEventListener("input", function () {

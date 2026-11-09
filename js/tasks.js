@@ -4,12 +4,34 @@ function afficherTaches(
   auChangementDePriorite,
   aSupprimer,
   aModifier,
-  annulerModification
+  annulerModification,
+  afficherTerminees
 ) {
   const liste = document.querySelector("#liste-taches");
+  const listeTerminees = document.querySelector("#liste-taches-terminees");
+  const sectionTerminees = document.querySelector("#section-taches-terminees");
   liste.innerHTML = "";
+  listeTerminees.innerHTML = "";
 
-  donnees.taches.forEach(function (tache) {
+  const tachesActives = donnees.taches.filter(function (tache) {
+    return tache.statut !== "terminee";
+  });
+  const tachesTerminees = donnees.taches.filter(function (tache) {
+    return tache.statut === "terminee";
+  });
+  sectionTerminees.hidden = !afficherTerminees || tachesTerminees.length === 0;
+
+  if (tachesActives.length === 0) {
+    const message = document.createElement("li");
+    message.className = "liste-taches-vide";
+    message.textContent = tachesTerminees.length > 0
+      ? "Aucune tâche à faire."
+      : "Aucune tâche pour le moment.";
+    liste.appendChild(message);
+  }
+
+  const tachesVisibles = tachesActives.concat(afficherTerminees ? tachesTerminees : []);
+  tachesVisibles.forEach(function (tache) {
     const element = document.createElement("li");
     const libelle = document.createElement("label");
     const caseTerminee = document.createElement("input");
@@ -41,12 +63,6 @@ function afficherTaches(
       if (estEnRetard) {
         element.classList.add("tache-en-retard");
         details.textContent = "En retard · Échéance : " + echeance.toLocaleString("fr-FR");
-        const pingouinEnRetard = document.createElement("span");
-        pingouinEnRetard.className = "pingouin-en-retard";
-        pingouinEnRetard.setAttribute("aria-hidden", "true");
-        pingouinEnRetard.textContent = "🐧";
-        details.appendChild(document.createTextNode(" "));
-        details.appendChild(pingouinEnRetard);
       } else if (tache.echeance) {
         details.textContent = "Échéance : " + echeance.toLocaleString("fr-FR");
       }
@@ -215,6 +231,6 @@ function afficherTaches(
       element.classList.add("tache-terminee");
     }
 
-    liste.appendChild(element);
+    (tache.statut === "terminee" ? listeTerminees : liste).appendChild(element);
   });
 }

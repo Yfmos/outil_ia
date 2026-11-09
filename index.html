@@ -14,7 +14,9 @@
   <main>
     <section id="banquise" aria-labelledby="titre-banquise">
       <img src="assets/images/banquise.svg" alt="">
-      <div id="pingouins" aria-hidden="true"></div>
+      <div id="defilement-pingouins" role="region" aria-label="Pingouins sur la banquise" tabindex="0">
+        <div id="pingouins"></div>
+      </div>
       <div class="banquise-info">
         <h2 id="titre-banquise">Ma banquise</h2>
         <p id="progression" aria-live="polite"></p>
@@ -45,7 +47,16 @@
         <p class="aide-rappel">Le rappel s’affichera dans TaskFlow si l’application est ouverte à l’heure choisie.</p>
         <button type="submit">Ajouter la tâche</button>
       </form>
+      <label class="afficher-terminees">
+        <input id="afficher-terminees" type="checkbox">
+        <span>Afficher les tâches terminées</span>
+        <span id="nombre-terminees" aria-live="polite"></span>
+      </label>
       <ul id="liste-taches"></ul>
+      <section id="section-taches-terminees" aria-labelledby="titre-taches-terminees" hidden>
+        <h3 id="titre-taches-terminees">Tâches terminées</h3>
+        <ul id="liste-taches-terminees"></ul>
+      </section>
     </section>
   </main>
 
