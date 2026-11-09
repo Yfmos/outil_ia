@@ -304,3 +304,4 @@ Pour repérer une tâche en retard, compare son échéance à la date du jour : 
 - `js/app.js` charge les données au démarrage.
 - `assets/images/banquise.svg` est le fond de la banquise.
 - `assets/icons/` est vide pour l'instant (un fichier `.gitkeep` garde le dossier).
+

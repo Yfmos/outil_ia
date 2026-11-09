@@ -11,6 +11,9 @@
 - En tant qu’étudiant, je veux marquer une tâche comme terminée, puis pouvoir voir visuellement qu’elle est accomplie, afin de suivre mon avancement sans la confondre avec les tâches restantes.
 - En tant qu’étudiant, je veux filtrer la liste pour afficher toutes les tâches, seulement celles à faire ou seulement celles terminées, afin de retrouver rapidement les tâches correspondant à mon besoin.
 - En tant qu’étudiant, je veux supprimer une tâche de ma liste, afin de retirer celles qui ne sont plus utiles et de garder une liste à jour.
+- En tant qu’étudiant, je veux pouvoir créer des tâches personnalisées, autant que voulu et manuellement.
+- En tant qu’étudiant, je veux pouvoir modifier facilement une tâche créée afin de mettre à jour son titre, sa priorité, son échéance et son rappel sans perdre son état.
+
 ```
 
 ## Arborescence
@@ -50,5 +53,3 @@
   "filtreActif": "toutes"
 }
 ```
-
-

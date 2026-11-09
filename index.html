@@ -12,16 +12,48 @@
   </header>
 
   <main>
-    <section id="banquise" aria-label="Banquise">
-      <img src="assets/images/banquise.svg" alt="Banquise">
-      <div id="pingouins"></div>
+    <section id="banquise" aria-labelledby="titre-banquise">
+      <img src="assets/images/banquise.svg" alt="">
+      <div id="pingouins" aria-hidden="true"></div>
+      <div class="banquise-info">
+        <h2 id="titre-banquise">Ma banquise</h2>
+        <p id="progression" aria-live="polite"></p>
+      </div>
     </section>
 
     <section id="taches" aria-label="Liste des tâches">
       <h2>Mes tâches</h2>
+      <form id="formulaire-tache">
+        <label for="titre-tache">Nouvelle tâche</label>
+        <input
+          id="titre-tache"
+          name="titre"
+          type="text"
+          placeholder="Ex. Réviser le chapitre 3"
+          required
+        >
+        <label for="priorite-tache">Priorité</label>
+        <select id="priorite-tache" name="priorite">
+          <option value="basse">Basse</option>
+          <option value="moyenne" selected>Moyenne</option>
+          <option value="haute">Haute</option>
+        </select>
+        <label for="echeance-tache">Échéance</label>
+        <input id="echeance-tache" name="echeance" type="datetime-local">
+        <label for="rappel-tache">Me rappeler le</label>
+        <input id="rappel-tache" name="rappelLe" type="datetime-local">
+        <p class="aide-rappel">Le rappel s’affichera dans TaskFlow si l’application est ouverte à l’heure choisie.</p>
+        <button type="submit">Ajouter la tâche</button>
+      </form>
       <ul id="liste-taches"></ul>
     </section>
   </main>
+
+  <dialog id="dialogue-rappel" aria-labelledby="titre-rappel">
+    <h2 id="titre-rappel">Rappel de tâche</h2>
+    <p id="message-rappel"></p>
+    <button id="fermer-rappel" type="button">J’ai compris</button>
+  </dialog>
 
   <script src="js/storage.js"></script>
   <script src="js/tasks.js"></script>

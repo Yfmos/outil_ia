@@ -1,5 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-label="Banquise">
-  <rect width="960" height="320" fill="#b9e3f5"/>
-  <ellipse cx="480" cy="250" rx="420" ry="70" fill="#f7fbff"/>
-  <ellipse cx="480" cy="270" rx="360" ry="40" fill="#e4f1fa"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" fill="none">
+  <defs>
+    <linearGradient id="ciel" x1="480" y1="0" x2="480" y2="250" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#75C4E8"/>
+      <stop offset="1" stop-color="#DDF5FF"/>
+    </linearGradient>
+    <linearGradient id="glace" x1="480" y1="177" x2="480" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#C9E9F7"/>
+    </linearGradient>
+    <linearGradient id="mer" x1="480" y1="260" x2="480" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#69B9DA"/>
+      <stop offset="1" stop-color="#3C9FC9"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="320" fill="url(#ciel)"/>
+  <circle cx="814" cy="65" r="27" fill="#FFF6CF"/>
+  <path d="M0 174 103 110l91 67 106-91 121 97 108-79 99 72 112-81 120 79v57H0v-57Z" fill="#F5FCFF" fill-opacity=".72"/>
+  <path d="m0 211 115-61 111 74 119-85 122 90 112-64 127 72 124-82 130 72v39H0v-55Z" fill="#C5E8F6"/>
+  <path d="M0 238c101-24 175-22 270 3 98 26 180 19 268-3 116-29 253-21 422 19v63H0v-82Z" fill="url(#glace)"/>
+  <path d="M0 281c106-20 185-12 284 9 104 22 192 11 292-10 129-27 252-18 384 7v33H0v-39Z" fill="url(#mer)"/>
+  <path d="M66 288c33-5 56-3 86 4M791 292c30-6 54-5 85 1M391 302c35-4 60-3 91 2" stroke="#D8F5FF" stroke-linecap="round" stroke-width="4" opacity=".8"/>
+  <path d="M304 225c43-10 82-8 119 2M594 236c35-8 69-7 100 1" stroke="#E4F6FC" stroke-linecap="round" stroke-width="5"/>
+  <circle cx="178" cy="69" r="3" fill="#FFF"/>
+  <circle cx="243" cy="40" r="2" fill="#FFF"/>
+  <circle cx="681" cy="94" r="3" fill="#FFF"/>
 </svg>
