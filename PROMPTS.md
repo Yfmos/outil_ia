@@ -172,3 +172,103 @@ Compris : la banquise commence avec **un seul pingouin**. Chaque tâche accompli
 - En tant qu’étudiant, je veux supprimer une tâche devenue inutile afin de garder ma liste claire et à jour.
 
 **Pourquoi :** c'est les mêmes
+
+## Prompt 9 · Arborescence (Codex)
+
+**Prompt :** propose moi une arborescence cohérente pour ce projet en html, css et java.
+
+**Résultat :** Voici une arborescence simple et adaptée à **TaskFlow**, en HTML, CSS et JavaScript natif :
+
+```text
+taskflow/
+├── index.html
+├── css/
+│   └── style.css
+├── js/
+│   ├── app.js
+│   ├── tasks.js
+│   ├── penguins.js
+│   └── storage.js
+└── assets/
+    ├── images/
+    │   └── banquise.svg
+    └── icons/
+```
+
+- **index.html** : structure de la page et zones principales de l’application.
+- **css/style.css** : mise en page, couleurs et animations.
+- **js/app.js** : démarrage de l’application et gestion des interactions.
+- **js/tasks.js** : ajout, modification, suppression, affichage et filtrage des tâches.
+- **js/penguins.js** : affichage des pingouins selon les tâches terminées ou en retard.
+- **js/storage.js** : sauvegarde des tâches dans le navigateur avec `localStorage`.
+- **assets/** : images et icônes utilisées par l’application.
+
+Pour ce projet, il s’agit de **JavaScript** (souvent abrégé JS), et non de Java, qui est un langage différent.
+
+## Prompt 9 · Modèle de données (Codex)
+
+**Prompt :** propose moi des Modèles de données cohérente pour ce projet exemple: {
+ "id": 1,
+ "titre": "Réviser le CSS",
+ "description": "Flexbox",
+ "priorite": "haute",
+ "echeance": "2026-11-15",
+ "statut": "a_faire"
+}
+
+**Résultat :** Voici des modèles de données adaptés à TaskFlow. Les exemples utilisent du **JSON** : les dates sont au format `AAAA-MM-JJ`, et les identifiants sont uniques.
+
+### Tâche
+
+```json
+{
+  "id": "task-1",
+  "titre": "Réviser le CSS",
+  "description": "Revoir Flexbox et faire des exercices",
+  "priorite": "haute",
+  "echeance": "2026-11-15",
+  "statut": "a_faire",
+  "sousTaches": [
+    {
+      "id": "subtask-1",
+      "titre": "Relire le cours sur Flexbox",
+      "terminee": false
+    },
+    {
+      "id": "subtask-2",
+      "titre": "Faire deux exercices",
+      "terminee": false
+    }
+  ],
+  "dateCreation": "2026-11-09T14:30:00"
+}
+```
+
+Valeurs possibles pour `priorite` : `"basse"`, `"moyenne"`, `"haute"`.  
+Valeurs possibles pour `statut` : `"a_faire"`, `"terminee"`.
+
+### Données de l’application
+
+Pour représenter l’ensemble des tâches et la progression de la banquise, tu peux regrouper les données ainsi :
+
+```json
+{
+  "taches": [
+    {
+      "id": "task-1",
+      "titre": "Réviser le CSS",
+      "description": "Revoir Flexbox et faire des exercices",
+      "priorite": "haute",
+      "echeance": "2026-11-15",
+      "statut": "a_faire",
+      "sousTaches": [],
+      "dateCreation": "2026-11-09T14:30:00"
+    }
+  ],
+  "filtreActif": "toutes"
+}
+```
+
+Le nombre de pingouins peut être calculé à partir des tâches terminées : **un pingouin initial, puis un pingouin ajouté par tâche accomplie**. Il n’est donc pas nécessaire de sauvegarder ce nombre séparément.
+
+Pour repérer une tâche en retard, compare son échéance à la date du jour : elle est en retard si elle n’est pas terminée et que son échéance est passée.
