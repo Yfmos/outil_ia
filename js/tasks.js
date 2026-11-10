@@ -1,3 +1,21 @@
+/**
+ * Module d'affichage et de gestion interactive des tâches et des catégories.
+ * Calcule dynamiquement les priorités en fonction des échéances,
+ * gère les filtres de catégories et assure le rendu complet du DOM.
+ */
+
+/**
+ * Détermine dynamiquement la priorité effective d'une tâche selon la proximité de son échéance.
+ * 
+ * Règles de calcul :
+ * - Si la tâche est terminée ou n'a pas d'échéance : priorité "basse".
+ * - Si l'échéance est aujourd'hui ou déjà dépassée (<= 0 jour) : priorité "haute" ("Fait le vite").
+ * - Si l'échéance arrive dans les 7 jours prochains (<= 7 jours) : priorité "moyenne" ("Va falloir le faire là").
+ * - Au-delà de 7 jours : priorité "basse" ("Ça peut attendre").
+ * 
+ * @param {Object} tache - L'objet tâche à évaluer.
+ * @returns {string} Le niveau de priorité calculé ("basse", "moyenne" ou "haute").
+ */
 function prioriteEffective(tache) {
   if (tache.statut === "terminee" || !tache.echeance) {
     return "basse";
@@ -8,6 +26,7 @@ function prioriteEffective(tache) {
     return "basse";
   }
 
+  // Calcul du nombre de jours calendaires complets restants (en UTC pour éviter les décalages horaires)
   const aujourdHui = new Date();
   const jourEcheance = Date.UTC(echeance.getFullYear(), echeance.getMonth(), echeance.getDate());
   const jourActuel = Date.UTC(aujourdHui.getFullYear(), aujourdHui.getMonth(), aujourdHui.getDate());
@@ -22,21 +41,37 @@ function prioriteEffective(tache) {
   return "basse";
 }
 
+/**
+ * Met à jour les options du menu déroulant des catégories dans le formulaire de création de tâche.
+ * Conserve la catégorie actuellement sélectionnée si elle existe toujours.
+ * 
+ * @param {Array<string>} categories - La liste des catégories du compte actif.
+ */
 function actualiserSelecteurCategories(categories) {
   const selecteur = document.querySelector("#categorie-tache");
   const categorieSelectionnee = selecteur.value;
+
+  // Réinitialisation avec l'option par défaut "Aucune catégorie"
   selecteur.replaceChildren(new Option("Aucune catégorie", ""));
   categories.forEach(function (categorie) {
     selecteur.add(new Option(categorie, categorie));
   });
+
+  // Préservation du choix en cours de saisie
   if (categories.includes(categorieSelectionnee)) {
     selecteur.value = categorieSelectionnee;
   }
 }
 
+/**
+ * Injecte la liste textuelle des catégories créées dans la section de gestion des catégories.
+ * 
+ * @param {Array<string>} categories - La liste des catégories existantes.
+ */
 function afficherCategories(categories) {
   const liste = document.querySelector("#liste-categories");
   liste.replaceChildren();
+
   categories.forEach(function (categorie) {
     const element = document.createElement("li");
     element.textContent = categorie;
@@ -44,13 +79,26 @@ function afficherCategories(categories) {
   });
 }
 
+/**
+ * Construit et actualise les cases à cocher de filtrage par catégorie dans l'interface.
+ * Gère également le filtre spécifique pour les tâches n'ayant aucune catégorie assignée.
+ * 
+ * @param {Array<string>} categories - Liste de toutes les catégories disponibles.
+ * @param {Array<Object>} taches - Tableau complet des tâches pour vérifier la présence de tâches sans catégorie.
+ * @param {Set<string>} categoriesVisibles - Ensemble des catégories actuellement cochées/actives.
+ * @param {boolean} afficherSansCategorie - Indique si les tâches sans catégorie doivent être affichées.
+ * @param {Function} auChangement - Callback notifié lors du basculement d'un filtre : fn(categorie|null, estVisible).
+ */
 function actualiserFiltresCategories(categories, taches, categoriesVisibles, afficherSansCategorie, auChangement) {
   const section = document.querySelector("#filtres-categories");
   const options = document.querySelector("#options-filtres-categories");
   options.replaceChildren();
+
+  // Vérifie si des tâches sans catégorie existent pour afficher le filtre associé
   const sansCategorieExiste = taches.some(function (tache) { return !tache.categorie; });
   section.hidden = categories.length === 0 && !sansCategorieExiste;
 
+  // Création des cases à cocher pour chaque catégorie existante
   categories.forEach(function (categorie, index) {
     const label = document.createElement("label");
     const caseFiltre = document.createElement("input");
@@ -65,6 +113,7 @@ function actualiserFiltresCategories(categories, taches, categoriesVisibles, aff
     options.appendChild(label);
   });
 
+  // Création du filtre pour les tâches orphelines de catégorie
   if (sansCategorieExiste) {
     const label = document.createElement("label");
     const caseFiltre = document.createElement("input");
@@ -80,6 +129,29 @@ function actualiserFiltresCategories(categories, taches, categoriesVisibles, aff
   }
 }
 
+/**
+ * Génère et injecte dans le DOM la liste des tâches actives et terminées.
+ * 
+ * Cette fonction prend en charge :
+ * - Le filtrage par catégories actives.
+ * - Le tri automatique par priorité calculée (Haute > Moyenne > Basse), puis par date d'échéance.
+ * - L'affichage des messages lorsque la liste ou le filtre est vide.
+ * - Le marquage terminée / à faire via case à cocher.
+ * - L'affichage des badges visuels de priorité avec libellés humoristiques ("Fait le vite", etc.).
+ * - L'affichage du badge de catégorie.
+ * - Le formulaire de modification en ligne intégrant le titre, la catégorie et les dates.
+ * - Le bouton de suppression avec callback.
+ * 
+ * @param {Object} donnees - Données globales du compte contenant les tâches et catégories.
+ * @param {Function} auChangementDeStatut - Callback exécuté quand la tâche est cochée/décochée : fn(tache, estTerminee).
+ * @param {Function} aSupprimer - Callback exécuté pour demander la suppression : fn(tache).
+ * @param {Function} aModifier - Callback exécuté pour sauvegarder les modifications : fn(tache, modifications).
+ * @param {Function} annulerModification - Callback pour annuler l'édition en cours : fn().
+ * @param {boolean} afficherTerminees - Indique si la section des tâches terminées est visible.
+ * @param {Array<string>} categories - Liste des catégories disponibles pour le formulaire d'édition.
+ * @param {Set<string>} categoriesVisibles - Ensemble des catégories sélectionnées dans le filtre.
+ * @param {boolean} afficherSansCategorie - Si true, inclut les tâches sans catégorie.
+ */
 function afficherTaches(
   donnees,
   auChangementDeStatut,
@@ -91,17 +163,21 @@ function afficherTaches(
   categoriesVisibles,
   afficherSansCategorie
 ) {
+  // Récupération des conteneurs de liste dans le DOM
   const liste = document.querySelector("#liste-taches");
   const listeTerminees = document.querySelector("#liste-taches-terminees");
   const sectionTerminees = document.querySelector("#section-taches-terminees");
   liste.innerHTML = "";
   listeTerminees.innerHTML = "";
 
+  // Prédicat de filtrage par catégorie
   const correspondAuFiltreCategorie = function (tache) {
     return tache.categorie
       ? categoriesVisibles.has(tache.categorie)
       : afficherSansCategorie;
   };
+
+  // Séparation des tâches actives et terminées respectant les filtres de catégories
   const tachesActives = donnees.taches.filter(function (tache) {
     return tache.statut !== "terminee" && correspondAuFiltreCategorie(tache);
   });
@@ -111,6 +187,8 @@ function afficherTaches(
   const toutesTachesActives = donnees.taches.filter(function (tache) {
     return tache.statut !== "terminee";
   });
+
+  // Tri des tâches actives : priorité effective en premier (haute -> moyenne -> basse), puis échéance la plus proche
   const rangPriorite = { haute: 0, moyenne: 1, basse: 2 };
   tachesActives.sort(function (a, b) {
     const differencePriorite = rangPriorite[prioriteEffective(a)] - rangPriorite[prioriteEffective(b)];
@@ -122,11 +200,16 @@ function afficherTaches(
     const echeanceB = b.echeance ? new Date(b.echeance).getTime() : Infinity;
     return echeanceA === echeanceB ? 0 : echeanceA - echeanceB;
   });
+
+  // Tri des tâches terminées par priorité effective
   tachesTerminees.sort(function (a, b) {
     return rangPriorite[prioriteEffective(a)] - rangPriorite[prioriteEffective(b)];
   });
+
+  // Visibilité du conteneur des tâches terminées
   sectionTerminees.hidden = !afficherTerminees || tachesTerminees.length === 0;
 
+  // Affichage d'un message indicatif si la liste des tâches actives est vide
   if (tachesActives.length === 0) {
     const message = document.createElement("li");
     message.className = "liste-taches-vide";
@@ -142,7 +225,9 @@ function afficherTaches(
     liste.appendChild(message);
   }
 
+  // Concaténation de la liste des éléments à restituer
   const tachesVisibles = tachesActives.concat(afficherTerminees ? tachesTerminees : []);
+
   tachesVisibles.forEach(function (tache) {
     const element = document.createElement("li");
     const libelle = document.createElement("label");
@@ -155,6 +240,7 @@ function afficherTaches(
       && echeance.getTime() <= Date.now()
       && tache.statut !== "terminee";
 
+    // Configuration de la case à cocher (statut à faire / terminée)
     caseTerminee.type = "checkbox";
     caseTerminee.checked = tache.statut === "terminee";
     caseTerminee.setAttribute(
@@ -170,6 +256,7 @@ function afficherTaches(
     element.appendChild(libelle);
     element.classList.add("priorite-" + prioriteActuelle);
 
+    // Badge d'affichage de la priorité calculée avec libellé explicite
     const badgePriorite = document.createElement("span");
     badgePriorite.className = "priorite-effective priorite-effective-" + prioriteActuelle;
     const libellesPriorite = {
@@ -182,6 +269,7 @@ function afficherTaches(
     libellePriorite.appendChild(badgePriorite);
     element.appendChild(libellePriorite);
 
+    // Badge de catégorie si assignée
     if (tache.categorie) {
       const badgeCategorie = document.createElement("span");
       badgeCategorie.className = "badge-categorie";
@@ -189,6 +277,7 @@ function afficherTaches(
       element.appendChild(badgeCategorie);
     }
 
+    // Affichage des informations d'échéance et de rappel
     if (tache.echeance || tache.rappelLe) {
       const details = document.createElement("span");
       details.className = "details-echeance";
@@ -207,12 +296,14 @@ function afficherTaches(
       element.appendChild(details);
     }
 
+    // Bouton de modification en ligne
     const boutonModification = document.createElement("button");
     boutonModification.type = "button";
     boutonModification.className = "modifier-tache";
     boutonModification.textContent = "Modifier";
     boutonModification.setAttribute("aria-label", "Modifier la tâche : " + tache.titre);
     boutonModification.addEventListener("click", function () {
+      // Construction dynamique du formulaire d'édition
       const formulaire = document.createElement("form");
       formulaire.className = "formulaire-modification";
 
@@ -223,6 +314,7 @@ function afficherTaches(
       ];
       const controles = {};
 
+      // Génération des champs titre et dates
       champs.forEach(function (champ) {
         const label = document.createElement("label");
         const input = document.createElement("input");
@@ -245,6 +337,7 @@ function afficherTaches(
         formulaire.appendChild(input);
       });
 
+      // Sélecteur de catégorie dans le formulaire d'édition
       const labelCategorie = document.createElement("label");
       const selectCategorie = document.createElement("select");
       const idCategorie = "modification-categorie-" + tache.id;
@@ -261,6 +354,7 @@ function afficherTaches(
       formulaire.appendChild(labelCategorie);
       formulaire.appendChild(selectCategorie);
 
+      // Boutons Enregistrer et Annuler
       const actions = document.createElement("div");
       actions.className = "actions-modification";
       const enregistrer = document.createElement("button");
@@ -274,17 +368,20 @@ function afficherTaches(
       actions.appendChild(annuler);
       formulaire.appendChild(actions);
 
+      // Soumission et validation des modifications
       formulaire.addEventListener("submit", function (evenement) {
         evenement.preventDefault();
         const titre = controles.titre.value.trim();
         const echeanceValeur = controles.echeance.value;
         const rappelValeur = controles.rappelLe.value;
 
+        // Validation du titre
         if (!titre) {
           controles.titre.setCustomValidity("Saisissez le titre de la tâche.");
           controles.titre.reportValidity();
           return;
         }
+        // Validation : un rappel nécessite une échéance
         if (rappelValeur && !echeanceValeur) {
           controles.echeance.setCustomValidity(
             "Ajoutez une échéance pour pouvoir programmer un rappel."
@@ -292,12 +389,14 @@ function afficherTaches(
           controles.echeance.reportValidity();
           return;
         }
+        // Validation : le rappel doit être chronologiquement antérieur à l'échéance
         if (rappelValeur && new Date(rappelValeur).getTime() >= new Date(echeanceValeur).getTime()) {
           controles.rappelLe.setCustomValidity("Le rappel doit être programmé avant l’échéance.");
           controles.rappelLe.reportValidity();
           return;
         }
 
+        // Transmission des nouvelles données au callback de sauvegarde
         aModifier(tache, {
           titre: titre,
           categorie: controles.categorie.value,
@@ -305,6 +404,8 @@ function afficherTaches(
           rappelLe: rappelValeur ? new Date(rappelValeur).toISOString() : ""
         });
       });
+
+      // Réinitialisation des messages d'erreur lors de la saisie
       controles.titre.addEventListener("input", function () {
         controles.titre.setCustomValidity("");
       });
@@ -315,10 +416,12 @@ function afficherTaches(
         });
       });
 
+      // Remplacement dans l'interface et focus
       element.replaceChildren(formulaire);
       controles.titre.focus();
     });
 
+    // Bouton de suppression de la tâche
     const boutonSuppression = document.createElement("button");
     boutonSuppression.type = "button";
     boutonSuppression.className = "supprimer-tache";
@@ -327,16 +430,20 @@ function afficherTaches(
     boutonSuppression.addEventListener("click", function () {
       aSupprimer(tache);
     });
+
+    // Regroupement des actions
     const actions = document.createElement("div");
     actions.className = "actions-tache";
     actions.appendChild(boutonModification);
     actions.appendChild(boutonSuppression);
     element.appendChild(actions);
 
+    // Style barré pour tâche achevée
     if (caseTerminee.checked) {
       element.classList.add("tache-terminee");
     }
 
+    // Placement dans la liste idoine
     (tache.statut === "terminee" ? listeTerminees : liste).appendChild(element);
   });
 }
