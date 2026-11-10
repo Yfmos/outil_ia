@@ -1,12 +1,161 @@
-const donnees = chargerDonnees();
+const formulaireCompte = document.querySelector("#formulaire-compte");
+const identifiantCompte = formulaireCompte.elements.identifiant;
+const motDePasseCompte = formulaireCompte.elements.motDePasse;
+const confirmerMotDePasse = formulaireCompte.elements.confirmation;
+const confirmationMotDePasse = document.querySelector("#confirmation-mot-de-passe");
+const erreurCompte = document.querySelector("#erreur-compte");
+const boutonSoumettreCompte = document.querySelector("#soumettre-compte");
+const boutonChangerModeCompte = document.querySelector("#changer-mode-compte");
+const connexion = document.querySelector("#connexion");
+const application = document.querySelector("#application");
+const sessionCompte = document.querySelector("#session-compte");
+const modeCompte = { inscription: false };
+
+function afficherModeCompte() {
+  confirmationMotDePasse.hidden = !modeCompte.inscription;
+  confirmerMotDePasse.required = modeCompte.inscription;
+  motDePasseCompte.autocomplete = modeCompte.inscription ? "new-password" : "current-password";
+  boutonSoumettreCompte.textContent = modeCompte.inscription ? "Créer mon compte" : "Se connecter";
+  boutonChangerModeCompte.textContent = modeCompte.inscription
+    ? "J’ai déjà un compte"
+    : "Créer un compte";
+  document.querySelector("#titre-connexion").textContent = modeCompte.inscription
+    ? "Créer un compte TaskFlow"
+    : "Connexion à TaskFlow";
+  erreurCompte.textContent = "";
+}
+
+formulaireCompte.addEventListener("submit", async function (evenement) {
+  evenement.preventDefault();
+  erreurCompte.textContent = "";
+
+  if (modeCompte.inscription && motDePasseCompte.value !== confirmerMotDePasse.value) {
+    erreurCompte.textContent = "Les mots de passe ne correspondent pas.";
+    confirmerMotDePasse.focus();
+    return;
+  }
+
+  boutonSoumettreCompte.disabled = true;
+  try {
+    const compte = modeCompte.inscription
+      ? await creerCompte(
+        identifiantCompte.value,
+        motDePasseCompte.value,
+        chargerComptes().length === 0 ? chargerDonneesLegacy() : donneesVides()
+      )
+      : await connecterCompte(identifiantCompte.value, motDePasseCompte.value);
+
+    definirCompteActif(compte.id);
+    connexion.hidden = true;
+    application.hidden = false;
+    sessionCompte.hidden = false;
+    document.querySelector("#nom-compte").textContent = compte.identifiant;
+    initialiserTaskFlow(compte);
+  } catch (erreur) {
+    erreurCompte.textContent = erreur.message || "Impossible d’ouvrir ce compte local.";
+  } finally {
+    boutonSoumettreCompte.disabled = false;
+  }
+});
+
+boutonChangerModeCompte.addEventListener("click", function () {
+  modeCompte.inscription = !modeCompte.inscription;
+  afficherModeCompte();
+});
+
+document.querySelector("#deconnexion").addEventListener("click", function () {
+  definirCompteActif(null);
+  window.location.reload();
+});
+
+afficherModeCompte();
+identifiantCompte.focus();
+
+function initialiserTaskFlow(compte) {
+const donnees = chargerDonnees(compte.id);
+let donneesModifiees = false;
+if (!Array.isArray(donnees.categories)) {
+  donnees.categories = [];
+  donneesModifiees = true;
+}
+donnees.taches.forEach(function (tache) {
+  if (typeof tache.categorie !== "string") {
+    tache.categorie = "";
+    donneesModifiees = true;
+  } else if (tache.categorie && !donnees.categories.includes(tache.categorie)) {
+    donnees.categories.push(tache.categorie);
+    donneesModifiees = true;
+  }
+});
+const categoriesVisibles = new Set(donnees.categories);
+let afficherSansCategorie = true;
+let prioritesInitialesMisesAJour = false;
+donnees.taches.forEach(function (tache) {
+  if (tache.priorite !== "basse") {
+    tache.priorite = "basse";
+    prioritesInitialesMisesAJour = true;
+  }
+});
+if (prioritesInitialesMisesAJour || donneesModifiees) {
+  sauvegarderDonnees(donnees);
+}
 const formulaireTache = document.querySelector("#formulaire-tache");
+const formulaireCategorie = document.querySelector("#formulaire-categorie");
+const champNouvelleCategorie = formulaireCategorie.elements.categorie;
+const etatCategories = document.querySelector("#etat-categories");
 const afficherTerminees = document.querySelector("#afficher-terminees");
 const nombreTerminees = document.querySelector("#nombre-terminees");
 const dialogueRappel = document.querySelector("#dialogue-rappel");
+const boutonNotifications = document.querySelector("#activer-notifications");
+const etatNotifications = document.querySelector("#etat-notifications");
 const rappelsEnAttente = [];
 const minuteursRappel = new Map();
 const delaiMaximalTimer = 2147483647;
 let minuteurEcheance;
+
+function mettreAJourEtatNotifications() {
+  if (!("Notification" in window)) {
+    boutonNotifications.hidden = true;
+    etatNotifications.textContent = "Les notifications de bureau ne sont pas disponibles dans ce navigateur.";
+    return;
+  }
+
+  boutonNotifications.hidden = false;
+  if (Notification.permission === "granted") {
+    boutonNotifications.textContent = "Notifications de bureau activées";
+    boutonNotifications.disabled = true;
+    etatNotifications.textContent = "";
+  } else if (Notification.permission === "denied") {
+    boutonNotifications.textContent = "Notifications bloquées";
+    boutonNotifications.disabled = true;
+    etatNotifications.textContent =
+      "Les notifications sont bloquées. Autorisez-les dans les paramètres du navigateur.";
+  } else {
+    boutonNotifications.disabled = false;
+    etatNotifications.textContent = "";
+  }
+}
+
+function afficherNotificationRappel(tache) {
+  if (!("Notification" in window) || Notification.permission !== "granted") {
+    return false;
+  }
+
+  try {
+    const notification = new Notification("Rappel TaskFlow", {
+      body: "Il est temps de vous occuper de « " + tache.titre + " ». Son échéance approche.",
+      tag: tache.id
+    });
+    notification.addEventListener("click", function () {
+      window.focus();
+      notification.close();
+    });
+    return true;
+  } catch (erreur) {
+    console.error("Impossible d’afficher la notification de rappel.", erreur);
+    return false;
+  }
+}
 
 function afficherProchainRappel() {
   if (dialogueRappel.open || rappelsEnAttente.length === 0) {
@@ -47,8 +196,10 @@ function programmerRappel(tache) {
       return;
     }
 
-    rappelsEnAttente.push(tache);
-    afficherProchainRappel();
+    if (!afficherNotificationRappel(tache)) {
+      rappelsEnAttente.push(tache);
+      afficherProchainRappel();
+    }
   }, Math.max(0, Math.min(attente, delaiMaximalTimer)));
   minuteursRappel.set(tache, minuteur);
 }
@@ -75,7 +226,9 @@ function programmerProchaineEcheance() {
     return;
   }
 
-  const attente = prochaineEcheance - maintenant;
+  const prochainMinuit = new Date();
+  prochainMinuit.setHours(24, 0, 0, 0);
+  const attente = Math.min(prochaineEcheance, prochainMinuit.getTime()) - maintenant;
   minuteurEcheance = window.setTimeout(function () {
     actualiserAffichage();
   }, Math.min(attente, delaiMaximalTimer));
@@ -87,13 +240,28 @@ function actualiserAffichage() {
   }).length;
   nombreTerminees.textContent = totalTerminees > 0 ? "(" + totalTerminees + ")" : "";
 
+  actualiserSelecteurCategories(donnees.categories);
+  afficherCategories(donnees.categories);
+  actualiserFiltresCategories(
+    donnees.categories,
+    donnees.taches,
+    categoriesVisibles,
+    afficherSansCategorie,
+    function (categorie, estVisible) {
+      if (categorie === null) {
+        afficherSansCategorie = estVisible;
+      } else if (estVisible) {
+        categoriesVisibles.add(categorie);
+      } else {
+        categoriesVisibles.delete(categorie);
+      }
+      actualiserAffichage();
+    }
+  );
   afficherTaches(donnees, function (tache, estTerminee) {
     tache.statut = estTerminee ? "terminee" : "a_faire";
     sauvegarderDonnees(donnees);
     actualiserAffichage();
-  }, function (tache, priorite) {
-    tache.priorite = priorite;
-    sauvegarderDonnees(donnees);
   }, function (tache) {
     window.clearTimeout(minuteursRappel.get(tache));
     minuteursRappel.delete(tache);
@@ -110,7 +278,7 @@ function actualiserAffichage() {
       || tache.echeance !== modifications.echeance;
 
     tache.titre = modifications.titre;
-    tache.priorite = modifications.priorite;
+    tache.categorie = modifications.categorie;
     tache.echeance = modifications.echeance;
     tache.rappelLe = modifications.rappelLe;
     if (rappelModifie) {
@@ -124,7 +292,7 @@ function actualiserAffichage() {
     actualiserAffichage();
   }, function () {
     actualiserAffichage();
-  }, afficherTerminees.checked);
+  }, afficherTerminees.checked, donnees.categories, categoriesVisibles, afficherSansCategorie);
   afficherPingouins(donnees);
   programmerProchaineEcheance();
 }
@@ -159,7 +327,8 @@ formulaireTache.addEventListener("submit", function (evenement) {
   const tache = {
     id: "task-" + Date.now() + "-" + Math.random().toString(36).slice(2),
     titre: titre,
-    priorite: formulaireTache.elements.priorite.value,
+    categorie: formulaireTache.elements.categorie.value,
+    priorite: "basse",
     echeance: echeance ? new Date(echeance).toISOString() : "",
     rappelLe: rappelLe ? new Date(rappelLe).toISOString() : "",
     statut: "a_faire",
@@ -175,8 +344,55 @@ formulaireTache.addEventListener("submit", function (evenement) {
   formulaireTache.elements.titre.focus();
 });
 
+formulaireCategorie.addEventListener("submit", function (evenement) {
+  evenement.preventDefault();
+
+  const nom = champNouvelleCategorie.value.trim();
+  if (!nom) {
+    champNouvelleCategorie.setCustomValidity("Saisissez le nom de la catégorie.");
+    champNouvelleCategorie.reportValidity();
+    return;
+  }
+
+  const existeDeja = donnees.categories.some(function (categorie) {
+    return categorie.localeCompare(nom, "fr", { sensitivity: "base" }) === 0;
+  });
+  if (existeDeja) {
+    champNouvelleCategorie.setCustomValidity("Cette catégorie existe déjà.");
+    champNouvelleCategorie.reportValidity();
+    return;
+  }
+
+  donnees.categories.push(nom);
+  categoriesVisibles.add(nom);
+  sauvegarderDonnees(donnees);
+  formulaireCategorie.reset();
+  etatCategories.textContent = "Catégorie ajoutée.";
+  actualiserAffichage();
+  champNouvelleCategorie.focus();
+});
+
+champNouvelleCategorie.addEventListener("input", function () {
+  champNouvelleCategorie.setCustomValidity("");
+  etatCategories.textContent = "";
+});
+
 formulaireTache.elements.titre.addEventListener("input", function () {
   formulaireTache.elements.titre.setCustomValidity("");
+});
+
+boutonNotifications.addEventListener("click", function () {
+  if (!("Notification" in window)) {
+    mettreAJourEtatNotifications();
+    return;
+  }
+
+  Notification.requestPermission().then(function () {
+    mettreAJourEtatNotifications();
+  }).catch(function (erreur) {
+    console.error("Impossible de demander l’autorisation des notifications.", erreur);
+    etatNotifications.textContent = "L’autorisation des notifications n’a pas pu être demandée.";
+  });
 });
 
 afficherTerminees.addEventListener("change", actualiserAffichage);
@@ -194,9 +410,12 @@ document.querySelector("#fermer-rappel").addEventListener("click", function () {
 });
 document.addEventListener("visibilitychange", function () {
   if (!document.hidden) {
+    mettreAJourEtatNotifications();
     actualiserAffichage();
   }
 });
 
 actualiserAffichage();
 donnees.taches.forEach(programmerRappel);
+mettreAJourEtatNotifications();
+}

@@ -22,11 +22,127 @@ header {
   padding-bottom: 0.25rem;
 }
 
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 header h1 {
   margin: 0;
   color: #174967;
   font-size: clamp(1.75rem, 4vw, 2.4rem);
   letter-spacing: -0.04em;
+}
+
+#session-compte {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #45677a;
+  font-size: 0.9rem;
+}
+
+#session-compte[hidden] {
+  display: none;
+}
+
+#deconnexion,
+#formulaire-compte button,
+.bouton-lien {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #1d6689;
+  border-radius: 0.55rem;
+  background: #1d6689;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#deconnexion:hover,
+#formulaire-compte button:hover {
+  background: #174967;
+}
+
+#connexion {
+  width: min(100%, 32rem);
+  margin: clamp(2rem, 8vh, 5rem) auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid #d5e8f1;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 16px 38px rgba(37, 91, 119, 0.12);
+  text-align: center;
+}
+
+#connexion h2 {
+  margin: 0;
+  color: #174967;
+}
+
+.aide-compte {
+  margin: 0.65rem 0 1.25rem;
+  color: #45677a;
+  font-size: 0.875rem;
+}
+
+#formulaire-compte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+#formulaire-compte label {
+  width: 100%;
+  color: #45677a;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+#formulaire-compte input {
+  width: min(100%, 24rem);
+  min-height: 2.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #b8d2df;
+  border-radius: 0.55rem;
+  font: inherit;
+}
+
+#confirmation-mot-de-passe {
+  display: contents;
+}
+
+#confirmation-mot-de-passe[hidden] {
+  display: none;
+}
+
+#erreur-compte {
+  margin: 0;
+  color: #a63d3d;
+  font-size: 0.875rem;
+}
+
+.bouton-lien {
+  margin-top: 0.75rem;
+  border-color: transparent;
+  background: transparent;
+  color: #1d6689;
+}
+
+.bouton-lien:hover {
+  background: #e4f3fa;
+}
+
+#formulaire-compte input:focus-visible,
+#formulaire-compte button:focus-visible,
+#deconnexion:focus-visible,
+.bouton-lien:focus-visible {
+  outline: 3px solid #75c4e8;
+  outline-offset: 2px;
 }
 
 #banquise {
@@ -67,10 +183,11 @@ header h1 {
 
 #pingouins {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   align-content: end;
-  justify-items: center;
+  align-items: flex-end;
+  justify-content: center;
   gap: 0.35rem;
   min-height: 100%;
   padding: clamp(5rem, 10vw, 6.5rem) 5% 8%;
@@ -128,10 +245,16 @@ header h1 {
   color: #174967;
 }
 
+#taches h3 {
+  margin: 0 0 0.75rem;
+  color: #174967;
+  font-size: 1rem;
+}
+
 #formulaire-tache {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
+  flex-direction: column;
+  align-items: center;
   gap: 0.65rem;
   margin-bottom: 1rem;
   padding: 1rem;
@@ -141,9 +264,11 @@ header h1 {
 }
 
 #formulaire-tache label {
+  width: 100%;
   color: #45677a;
   font-size: 0.875rem;
   font-weight: 600;
+  text-align: center;
 }
 
 #formulaire-tache input,
@@ -157,19 +282,41 @@ header h1 {
 }
 
 #formulaire-tache input {
-  flex: 1 1 15rem;
+  flex: 0 1 auto;
+  width: min(100%, 24rem);
   min-width: 0;
+  text-align: center;
+}
+
+#formulaire-tache select {
+  width: min(100%, 24rem);
+  min-height: 2.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #b8d2df;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: #17364b;
+  font: inherit;
 }
 
 #formulaire-tache input[type="datetime-local"] {
-  flex: 1 1 12rem;
+  width: min(100%, 24rem);
 }
 
 .aide-rappel {
-  flex-basis: 100%;
+  width: 100%;
   margin: 0;
   color: #45677a;
   font-size: 0.8rem;
+  text-align: center;
+}
+
+.etat-notifications {
+  width: 100%;
+  margin: 0;
+  color: #45677a;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 .afficher-terminees {
@@ -198,10 +345,6 @@ header h1 {
   font-size: 0.8rem;
 }
 
-#formulaire-tache select {
-  background: #fff;
-}
-
 #formulaire-tache button {
   border-color: #1d6689;
   background: #1d6689;
@@ -214,11 +357,144 @@ header h1 {
   background: #174967;
 }
 
+#formulaire-tache .bouton-notifications {
+  border-color: #b8d2df;
+  background: #f3fbff;
+  color: #174967;
+}
+
+#formulaire-tache .bouton-notifications:hover:not(:disabled) {
+  background: #e4f3fa;
+}
+
+#formulaire-tache .bouton-notifications:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
 #formulaire-tache input:focus-visible,
 #formulaire-tache select:focus-visible,
 #formulaire-tache button:focus-visible {
   outline: 3px solid #75c4e8;
   outline-offset: 2px;
+}
+
+#categories {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid #d5e8f1;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+#filtres-categories {
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border: 1px solid #d5e8f1;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+#filtres-categories h3 {
+  margin: 0 0 0.75rem;
+}
+
+#options-filtres-categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem 1rem;
+}
+
+#options-filtres-categories label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #45677a;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+#options-filtres-categories input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #1d6689;
+}
+
+#options-filtres-categories input:focus-visible {
+  outline: 3px solid #75c4e8;
+  outline-offset: 2px;
+}
+
+#formulaire-categorie {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+#formulaire-categorie label {
+  color: #45677a;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+#formulaire-categorie input,
+#formulaire-categorie button {
+  width: min(100%, 24rem);
+  min-height: 2.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #b8d2df;
+  border-radius: 0.55rem;
+  font: inherit;
+}
+
+#formulaire-categorie input {
+  text-align: center;
+}
+
+#formulaire-categorie button {
+  border-color: #1d6689;
+  background: #1d6689;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#formulaire-categorie button:hover {
+  background: #174967;
+}
+
+#formulaire-categorie input:focus-visible,
+#formulaire-categorie button:focus-visible {
+  outline: 3px solid #75c4e8;
+  outline-offset: 2px;
+}
+
+#etat-categories {
+  margin: 0;
+  color: #45677a;
+  font-size: 0.8rem;
+}
+
+#liste-categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#liste-categories li,
+.badge-categorie {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #e7f2f8;
+  color: #285d78;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .details-echeance {
@@ -410,34 +686,32 @@ header h1 {
   outline-offset: 2px;
 }
 
-.priorite-controle {
+.priorite-affichage {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #45677a;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
-.priorite-controle select {
-  padding: 0.4rem 0.65rem;
-  border: 1px solid currentColor;
+.priorite-effective {
+  padding: 0.25rem 0.55rem;
   border-radius: 999px;
-  background: #fff;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.priorite-basse .priorite-controle {
+.priorite-effective-basse {
+  background: #e8f5ed;
   color: #28714b;
 }
 
-.priorite-moyenne .priorite-controle {
-  color: #8a6412;
+.priorite-effective-moyenne {
+  background: #fff6d8;
+  color: #76550e;
 }
 
-.priorite-haute .priorite-controle {
-  color: #a63d3d;
+.priorite-effective-haute {
+  background: #fff0ed;
+  color: #963b35;
 }
 
 @keyframes pingouin-bond {
@@ -468,10 +742,6 @@ header h1 {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.65rem;
-  }
-
-  #formulaire-tache input {
-    flex-basis: 100%;
   }
 
   #liste-taches li .details-echeance {

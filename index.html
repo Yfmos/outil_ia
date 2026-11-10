@@ -9,9 +9,32 @@
 <body>
   <header>
     <h1>TaskFlow</h1>
+    <div id="session-compte" hidden>
+      <span id="nom-compte"></span>
+      <button id="deconnexion" type="button">Se déconnecter</button>
+    </div>
   </header>
 
   <main>
+    <section id="connexion" aria-labelledby="titre-connexion">
+      <h2 id="titre-connexion">Connexion à TaskFlow</h2>
+      <p class="aide-compte">Votre compte et votre sauvegarde restent sur ce navigateur et cet appareil.</p>
+      <form id="formulaire-compte">
+        <label for="identifiant-compte">Nom d’utilisateur</label>
+        <input id="identifiant-compte" name="identifiant" type="text" minlength="3" maxlength="40" autocomplete="username" required>
+        <label for="mot-de-passe-compte">Mot de passe</label>
+        <input id="mot-de-passe-compte" name="motDePasse" type="password" minlength="8" autocomplete="current-password" required>
+        <div id="confirmation-mot-de-passe" hidden>
+          <label for="confirmer-mot-de-passe">Confirmer le mot de passe</label>
+          <input id="confirmer-mot-de-passe" name="confirmation" type="password" minlength="8" autocomplete="new-password">
+        </div>
+        <p id="erreur-compte" role="status" aria-live="polite"></p>
+        <button id="soumettre-compte" type="submit">Se connecter</button>
+      </form>
+      <button id="changer-mode-compte" class="bouton-lien" type="button">Créer un compte</button>
+    </section>
+
+    <div id="application" hidden>
     <section id="banquise" aria-labelledby="titre-banquise">
       <img src="assets/images/banquise.svg" alt="">
       <div id="defilement-pingouins" role="region" aria-label="Pingouins sur la banquise" tabindex="0">
@@ -34,19 +57,32 @@
           placeholder="Ex. Réviser le chapitre 3"
           required
         >
-        <label for="priorite-tache">Priorité</label>
-        <select id="priorite-tache" name="priorite">
-          <option value="basse">Basse</option>
-          <option value="moyenne" selected>Moyenne</option>
-          <option value="haute">Haute</option>
+        <label for="categorie-tache">Catégorie</label>
+        <select id="categorie-tache" name="categorie">
+          <option value="">Aucune catégorie</option>
         </select>
         <label for="echeance-tache">Échéance</label>
         <input id="echeance-tache" name="echeance" type="datetime-local">
         <label for="rappel-tache">Me rappeler le</label>
         <input id="rappel-tache" name="rappelLe" type="datetime-local">
-        <p class="aide-rappel">Le rappel s’affichera dans TaskFlow si l’application est ouverte à l’heure choisie.</p>
+        <button id="activer-notifications" class="bouton-notifications" type="button">Activer les notifications de bureau</button>
+        <p id="etat-notifications" class="etat-notifications" aria-live="polite"></p>
         <button type="submit">Ajouter la tâche</button>
       </form>
+      <section id="categories" aria-labelledby="titre-categories">
+        <h3 id="titre-categories">Mes catégories</h3>
+        <form id="formulaire-categorie">
+          <label for="nouvelle-categorie">Créer une catégorie</label>
+          <input id="nouvelle-categorie" name="categorie" type="text" maxlength="40" required>
+          <button type="submit">Ajouter la catégorie</button>
+          <p id="etat-categories" aria-live="polite"></p>
+        </form>
+        <ul id="liste-categories" aria-label="Catégories créées"></ul>
+      </section>
+      <section id="filtres-categories" aria-labelledby="titre-filtres-categories" hidden>
+        <h3 id="titre-filtres-categories">Afficher les catégories</h3>
+        <div id="options-filtres-categories"></div>
+      </section>
       <label class="afficher-terminees">
         <input id="afficher-terminees" type="checkbox">
         <span>Afficher les tâches terminées</span>
@@ -58,6 +94,7 @@
         <ul id="liste-taches-terminees"></ul>
       </section>
     </section>
+    </div>
   </main>
 
   <dialog id="dialogue-rappel" aria-labelledby="titre-rappel">

@@ -1,11 +1,95 @@
+function prioriteEffective(tache) {
+  if (tache.statut === "terminee" || !tache.echeance) {
+    return "basse";
+  }
+
+  const echeance = new Date(tache.echeance);
+  if (Number.isNaN(echeance.getTime())) {
+    return "basse";
+  }
+
+  const aujourdHui = new Date();
+  const jourEcheance = Date.UTC(echeance.getFullYear(), echeance.getMonth(), echeance.getDate());
+  const jourActuel = Date.UTC(aujourdHui.getFullYear(), aujourdHui.getMonth(), aujourdHui.getDate());
+  const joursRestants = Math.round((jourEcheance - jourActuel) / 86400000);
+
+  if (joursRestants <= 0) {
+    return "haute";
+  }
+  if (joursRestants <= 7) {
+    return "moyenne";
+  }
+  return "basse";
+}
+
+function actualiserSelecteurCategories(categories) {
+  const selecteur = document.querySelector("#categorie-tache");
+  const categorieSelectionnee = selecteur.value;
+  selecteur.replaceChildren(new Option("Aucune catégorie", ""));
+  categories.forEach(function (categorie) {
+    selecteur.add(new Option(categorie, categorie));
+  });
+  if (categories.includes(categorieSelectionnee)) {
+    selecteur.value = categorieSelectionnee;
+  }
+}
+
+function afficherCategories(categories) {
+  const liste = document.querySelector("#liste-categories");
+  liste.replaceChildren();
+  categories.forEach(function (categorie) {
+    const element = document.createElement("li");
+    element.textContent = categorie;
+    liste.appendChild(element);
+  });
+}
+
+function actualiserFiltresCategories(categories, taches, categoriesVisibles, afficherSansCategorie, auChangement) {
+  const section = document.querySelector("#filtres-categories");
+  const options = document.querySelector("#options-filtres-categories");
+  options.replaceChildren();
+  const sansCategorieExiste = taches.some(function (tache) { return !tache.categorie; });
+  section.hidden = categories.length === 0 && !sansCategorieExiste;
+
+  categories.forEach(function (categorie, index) {
+    const label = document.createElement("label");
+    const caseFiltre = document.createElement("input");
+    caseFiltre.type = "checkbox";
+    caseFiltre.checked = categoriesVisibles.has(categorie);
+    caseFiltre.setAttribute("aria-label", "Afficher la catégorie " + categorie);
+    caseFiltre.addEventListener("change", function () {
+      auChangement(categorie, caseFiltre.checked);
+    });
+    label.appendChild(caseFiltre);
+    label.appendChild(document.createTextNode(" " + categorie));
+    options.appendChild(label);
+  });
+
+  if (sansCategorieExiste) {
+    const label = document.createElement("label");
+    const caseFiltre = document.createElement("input");
+    caseFiltre.type = "checkbox";
+    caseFiltre.checked = afficherSansCategorie;
+    caseFiltre.setAttribute("aria-label", "Afficher les tâches sans catégorie");
+    caseFiltre.addEventListener("change", function () {
+      auChangement(null, caseFiltre.checked);
+    });
+    label.appendChild(caseFiltre);
+    label.appendChild(document.createTextNode(" Sans catégorie"));
+    options.appendChild(label);
+  }
+}
+
 function afficherTaches(
   donnees,
   auChangementDeStatut,
-  auChangementDePriorite,
   aSupprimer,
   aModifier,
   annulerModification,
-  afficherTerminees
+  afficherTerminees,
+  categories,
+  categoriesVisibles,
+  afficherSansCategorie
 ) {
   const liste = document.querySelector("#liste-taches");
   const listeTerminees = document.querySelector("#liste-taches-terminees");
@@ -13,20 +97,48 @@ function afficherTaches(
   liste.innerHTML = "";
   listeTerminees.innerHTML = "";
 
+  const correspondAuFiltreCategorie = function (tache) {
+    return tache.categorie
+      ? categoriesVisibles.has(tache.categorie)
+      : afficherSansCategorie;
+  };
   const tachesActives = donnees.taches.filter(function (tache) {
-    return tache.statut !== "terminee";
+    return tache.statut !== "terminee" && correspondAuFiltreCategorie(tache);
   });
   const tachesTerminees = donnees.taches.filter(function (tache) {
-    return tache.statut === "terminee";
+    return tache.statut === "terminee" && correspondAuFiltreCategorie(tache);
+  });
+  const toutesTachesActives = donnees.taches.filter(function (tache) {
+    return tache.statut !== "terminee";
+  });
+  const rangPriorite = { haute: 0, moyenne: 1, basse: 2 };
+  tachesActives.sort(function (a, b) {
+    const differencePriorite = rangPriorite[prioriteEffective(a)] - rangPriorite[prioriteEffective(b)];
+    if (differencePriorite !== 0) {
+      return differencePriorite;
+    }
+
+    const echeanceA = a.echeance ? new Date(a.echeance).getTime() : Infinity;
+    const echeanceB = b.echeance ? new Date(b.echeance).getTime() : Infinity;
+    return echeanceA === echeanceB ? 0 : echeanceA - echeanceB;
+  });
+  tachesTerminees.sort(function (a, b) {
+    return rangPriorite[prioriteEffective(a)] - rangPriorite[prioriteEffective(b)];
   });
   sectionTerminees.hidden = !afficherTerminees || tachesTerminees.length === 0;
 
   if (tachesActives.length === 0) {
     const message = document.createElement("li");
     message.className = "liste-taches-vide";
-    message.textContent = tachesTerminees.length > 0
-      ? "Aucune tâche à faire."
-      : "Aucune tâche pour le moment.";
+    if (toutesTachesActives.length > 0) {
+      message.textContent = "Aucune tâche à faire dans les catégories sélectionnées.";
+    } else {
+      message.textContent = donnees.taches.some(function (tache) {
+        return tache.statut === "terminee";
+      })
+        ? "Aucune tâche à faire."
+        : "Aucune tâche pour le moment.";
+    }
     liste.appendChild(message);
   }
 
@@ -35,9 +147,9 @@ function afficherTaches(
     const element = document.createElement("li");
     const libelle = document.createElement("label");
     const caseTerminee = document.createElement("input");
-    const libellePriorite = document.createElement("label");
-    const priorite = document.createElement("select");
+    const libellePriorite = document.createElement("span");
     const echeance = tache.echeance ? new Date(tache.echeance) : null;
+    const prioriteActuelle = prioriteEffective(tache);
     const estEnRetard = echeance
       && !Number.isNaN(echeance.getTime())
       && echeance.getTime() <= Date.now()
@@ -56,6 +168,26 @@ function afficherTaches(
     libelle.appendChild(caseTerminee);
     libelle.appendChild(document.createTextNode(" " + tache.titre));
     element.appendChild(libelle);
+    element.classList.add("priorite-" + prioriteActuelle);
+
+    const badgePriorite = document.createElement("span");
+    badgePriorite.className = "priorite-effective priorite-effective-" + prioriteActuelle;
+    const libellesPriorite = {
+      basse: "Ça peut attendre",
+      moyenne: "Va falloir le faire là",
+      haute: "Fait le vite"
+    };
+    badgePriorite.textContent = "Priorité : " + libellesPriorite[prioriteActuelle];
+    libellePriorite.className = "priorite-affichage";
+    libellePriorite.appendChild(badgePriorite);
+    element.appendChild(libellePriorite);
+
+    if (tache.categorie) {
+      const badgeCategorie = document.createElement("span");
+      badgeCategorie.className = "badge-categorie";
+      badgeCategorie.textContent = tache.categorie;
+      element.appendChild(badgeCategorie);
+    }
 
     if (tache.echeance || tache.rappelLe) {
       const details = document.createElement("span");
@@ -74,28 +206,6 @@ function afficherTaches(
       }
       element.appendChild(details);
     }
-
-    libellePriorite.className = "priorite-controle";
-    libellePriorite.appendChild(document.createTextNode("Priorité "));
-    priorite.setAttribute("aria-label", "Priorité de " + tache.titre);
-    ["basse", "moyenne", "haute"].forEach(function (valeur) {
-      const option = document.createElement("option");
-      option.value = valeur;
-      option.textContent = valeur.charAt(0).toUpperCase() + valeur.slice(1);
-      priorite.appendChild(option);
-    });
-    priorite.value = ["basse", "moyenne", "haute"].includes(tache.priorite)
-      ? tache.priorite
-      : "moyenne";
-    tache.priorite = priorite.value;
-    element.classList.add("priorite-" + priorite.value);
-    priorite.addEventListener("change", function () {
-      element.classList.remove("priorite-basse", "priorite-moyenne", "priorite-haute");
-      element.classList.add("priorite-" + priorite.value);
-      auChangementDePriorite(tache, priorite.value);
-    });
-    libellePriorite.appendChild(priorite);
-    element.appendChild(libellePriorite);
 
     const boutonModification = document.createElement("button");
     boutonModification.type = "button";
@@ -135,25 +245,21 @@ function afficherTaches(
         formulaire.appendChild(input);
       });
 
-      const labelPriorite = document.createElement("label");
-      const selectPriorite = document.createElement("select");
-      const idPriorite = "modification-priorite-" + tache.id;
-      labelPriorite.htmlFor = idPriorite;
-      labelPriorite.textContent = "Priorité";
-      selectPriorite.id = idPriorite;
-      selectPriorite.name = "priorite";
-      ["basse", "moyenne", "haute"].forEach(function (valeur) {
-        const option = document.createElement("option");
-        option.value = valeur;
-        option.textContent = valeur.charAt(0).toUpperCase() + valeur.slice(1);
-        selectPriorite.appendChild(option);
+      const labelCategorie = document.createElement("label");
+      const selectCategorie = document.createElement("select");
+      const idCategorie = "modification-categorie-" + tache.id;
+      labelCategorie.htmlFor = idCategorie;
+      labelCategorie.textContent = "Catégorie";
+      selectCategorie.id = idCategorie;
+      selectCategorie.name = "categorie";
+      selectCategorie.add(new Option("Aucune catégorie", ""));
+      categories.forEach(function (categorie) {
+        selectCategorie.add(new Option(categorie, categorie));
       });
-      selectPriorite.value = ["basse", "moyenne", "haute"].includes(tache.priorite)
-        ? tache.priorite
-        : "moyenne";
-      controles.priorite = selectPriorite;
-      formulaire.appendChild(labelPriorite);
-      formulaire.appendChild(selectPriorite);
+      selectCategorie.value = tache.categorie || "";
+      controles.categorie = selectCategorie;
+      formulaire.appendChild(labelCategorie);
+      formulaire.appendChild(selectCategorie);
 
       const actions = document.createElement("div");
       actions.className = "actions-modification";
@@ -194,7 +300,7 @@ function afficherTaches(
 
         aModifier(tache, {
           titre: titre,
-          priorite: controles.priorite.value,
+          categorie: controles.categorie.value,
           echeance: echeanceValeur ? new Date(echeanceValeur).toISOString() : "",
           rappelLe: rappelValeur ? new Date(rappelValeur).toISOString() : ""
         });
